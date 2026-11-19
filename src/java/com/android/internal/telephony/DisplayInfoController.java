@@ -136,7 +136,7 @@ public class DisplayInfoController extends Handler {
     public void updateTelephonyDisplayInfo() {
         if (mNetworkTypeController != null && mServiceState != null) {
             TelephonyDisplayInfo newDisplayInfo = new TelephonyDisplayInfo(
-                    mNetworkTypeController.getDataNetworkType(),
+                    getDataNetworkTypeForDisplay(),
                     mNetworkTypeController.getOverrideNetworkType(),
                     isRoaming(),
                     mServiceState.isUsingNonTerrestrialNetwork(),
@@ -152,6 +152,18 @@ public class DisplayInfoController extends Handler {
         } else {
             loge("Found null object");
         }
+    }
+
+    private int getDataNetworkTypeForDisplay() {
+        int networkType = mNetworkTypeController.getDataNetworkType();
+        if (networkType == TelephonyManager.NETWORK_TYPE_UNKNOWN
+                && mServiceState.getVoiceRegState() == ServiceState.STATE_IN_SERVICE
+                && mServiceState.getRilVoiceRadioTechnology()
+                        == ServiceState.RIL_RADIO_TECHNOLOGY_NR) {
+            logl("Data radio technology unknown on an NR cell, reporting NR for display.");
+            return TelephonyManager.NETWORK_TYPE_NR;
+        }
+        return networkType;
     }
 
     /**
